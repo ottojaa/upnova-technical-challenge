@@ -1,0 +1,16 @@
+{
+  "name": "task1",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "packages/task1",
+  "sourceRoot": "packages/task1",
+  "projectType": "library",
+  "targets": {
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node task1.js",
+        "cwd": "packages/task1"
+      }
+    }
+  }
+}

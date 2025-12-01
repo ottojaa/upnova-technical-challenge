@@ -20,6 +20,12 @@ function OTPInput() {
     // Only allow single digit numbers
     if (!/^\d$/.test(value) && value !== "") return;
 
+    // Reset status if we're modifying after success
+    if (status === "success") {
+      setStatus("idle");
+      setIconType("email");
+    }
+
     const newDigits = [...digits];
     newDigits[index] = value;
     setDigits(newDigits);
@@ -60,6 +66,13 @@ function OTPInput() {
   const handleKeyDown = (index, e) => {
     if (e.key === "Backspace") {
       e.preventDefault();
+
+      // Reset status if we're modifying after success
+      if (status === "success") {
+        setStatus("idle");
+        setIconType("email");
+      }
+
       const newDigits = [...digits];
 
       if (digits[index]) {
@@ -158,6 +171,7 @@ function OTPInput() {
                 onPaste={handlePaste}
                 onFocus={() => setFocusedIndex(index)}
               />
+              {!digit && <div className="otp-placeholder">0</div>}
               {digit && (
                 <motion.div
                   className="otp-digit"

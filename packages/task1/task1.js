@@ -60,14 +60,14 @@ cartEventManager.addChainEvent({
   },
 });
 
-// Test the chain
 const mockCart = {
-  total_price: 15000, // $150
+  total_price: 15000,
   items: [{ id: "product-1" }],
 };
 
 (async () => {
   await cartEventManager.startChainEvent(mockCart);
+
   console.log("CHAIN FINISHED");
   console.log("Final cart:", cartEventManager.getCart());
 })();

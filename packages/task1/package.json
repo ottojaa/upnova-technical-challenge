@@ -1,0 +1,9 @@
+{
+  "name": "@upnova/task1",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "task1.js",
+  "scripts": {
+    "start": "node task1.js"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "task3",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "apps/task3",
+  "sourceRoot": "apps/task3/src",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "apps/task3"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/task3"],
+      "options": {
+        "command": "vite build",
+        "cwd": "apps/task3"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview",
+        "cwd": "apps/task3"
+      }
+    }
+  }
+}
