@@ -1,3 +1,5 @@
+import { addToCart, clearCart, getCart } from "./cartApi.js";
+
 class CartChainEventManager {
   constructor() {
     this.events = [];
@@ -38,35 +40,100 @@ class CartChainEventManager {
 const cartEventManager = new CartChainEventManager();
 
 cartEventManager.addChainEvent({
-  name: "CHECK_AND_ADD_GIFT",
-  action: async (cart) => {
-    console.log("Checking cart value...");
-    // Simulate checking cart and adding gift
-    if (cart.total_price > 10000) {
-      // over $100 (in cents)
-      console.log("Adding gift product...");
-      return { ...cart, items: [...cart.items, { id: "gift-123" }] };
-    }
-    return cart;
+  name: "CLEAR_CART",
+  action: async () => {
+    console.log("Clearing cart...");
+    const newCart = await clearCart();
+    return newCart;
   },
 });
 
 cartEventManager.addChainEvent({
-  name: "UPDATE_CART_ATTRIBUTE",
+  name: "ADD_ITEM",
   action: async (cart) => {
-    console.log("Updating cart attributes...");
-    // Simulate updating cart attributes
-    return { ...cart, attributes: { gift_added: "true" } };
+    console.log("Adding item to cart...");
+    // Call /cart/add to add a new item
+    const newCart = await addToCart({
+      id: "product-2",
+      price: 5000,
+      quantity: 1,
+      title: "Product 2",
+    });
+    return newCart;
   },
 });
 
-const mockCart = {
-  total_price: 15000,
-  items: [{ id: "product-1" }],
-};
+cartEventManager.addChainEvent({
+  name: "ADD_ITEM",
+  action: async (cart) => {
+    console.log("Adding item to cart...");
+    // Call /cart/add to add a new item
+    const newCart = await addToCart({
+      id: "product-2",
+      price: 6000,
+      quantity: 1,
+      title: "Product 2",
+    });
+    return newCart;
+  },
+});
+
+cartEventManager.addChainEvent({
+  name: "CHECK_AND_ADD_GIFT",
+  action: async (cart) => {
+    console.log("Checking cart value...");
+
+    if (cart.total_price > 10000) {
+      console.log("Adding gift product...");
+      const newCart = await addToCart({
+        id: "gift-123",
+        price: 0,
+        quantity: 1,
+        title: "Free Gift",
+      });
+      return newCart;
+    }
+
+    return null;
+  },
+});
+
+cartEventManager.addChainEvent({
+  name: "CLEAR_CART",
+  action: async (cart) => {
+    console.log("Clearing cart...");
+    const newCart = await clearCart();
+    return newCart;
+  },
+});
+
+cartEventManager.addChainEvent({
+  name: "CHECK_AND_ADD_GIFT",
+  action: async (cart) => {
+    console.log("Checking cart value...");
+
+    if (cart.total_price > 10000) {
+      console.log("Adding gift product...");
+      const newCart = await addToCart({
+        id: "gift-123",
+        price: 0,
+        quantity: 1,
+        title: "Free Gift",
+      });
+      return newCart;
+    }
+
+    return null;
+  },
+});
 
 (async () => {
-  await cartEventManager.startChainEvent(mockCart);
+  // Fetch the current cart from /cart.json
+  const cart = await getCart();
+  console.log("Initial cart:", cart);
+
+  // Start the chain event
+  await cartEventManager.startChainEvent(cart);
 
   console.log("CHAIN FINISHED");
   console.log("Final cart:", cartEventManager.getCart());

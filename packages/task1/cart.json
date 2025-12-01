@@ -1,0 +1,12 @@
+{
+  "total_price": 10000,
+  "items": [
+    {
+      "id": "product-2",
+      "price": 5000,
+      "quantity": 2,
+      "title": "Product 2"
+    }
+  ],
+  "attributes": {}
+}
