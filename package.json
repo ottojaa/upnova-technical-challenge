@@ -1,0 +1,14 @@
+{
+  "name": "upnova-technical-challenge",
+  "version": "1.0.0",
+  "description": "Simple Node.js repo for running one-off scripts",
+  "type": "module",
+  "scripts": {
+    "script": "node"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+
+
