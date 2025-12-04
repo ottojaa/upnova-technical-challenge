@@ -7,12 +7,12 @@ import EmptyState from "./components/EmptyState";
 import PlanSelector from "./components/PlanSelector";
 import TodoList from "./components/TodoList";
 import WeatherCard from "./components/WeatherCard";
+import { Plan, Todo, UserPreferences, WeatherData } from "./types";
 import {
   createNewPlan,
   loadCurrentPlanId,
   loadPlans,
   loadPreferences,
-  migrateOldDataIfNeeded,
   saveCurrentPlanId,
   savePlans,
   savePreferences,
@@ -20,16 +20,13 @@ import {
 import { getWeatherForLocation } from "./utils/weather";
 
 function App() {
-  const [plans, setPlans] = useState([]);
-  const [currentPlanId, setCurrentPlanId] = useState(null);
-  const [userPreferences, setUserPreferences] = useState({});
-  const [weatherData, setWeatherData] = useState(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>({});
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
 
   // Load data from localStorage on mount
   useEffect(() => {
-    // First, try to migrate any old data
-    migrateOldDataIfNeeded();
-
     const loadedPlans = loadPlans();
     const loadedPreferences = loadPreferences();
     const loadedCurrentPlanId = loadCurrentPlanId();
@@ -76,11 +73,11 @@ function App() {
 
   // Get current plan
   const currentPlan = plans.find((p) => p.id === currentPlanId);
-  const todos = currentPlan?.todos || [];
-  const tripLocation = currentPlan?.location || null;
+  const todos: Todo[] = currentPlan?.todos || [];
+  const tripLocation: string | null = currentPlan?.location || null;
 
   // Update current plan
-  const updateCurrentPlan = (updates) => {
+  const updateCurrentPlan = (updates: Partial<Plan>) => {
     setPlans((prev) =>
       prev.map((plan) =>
         plan.id === currentPlanId
@@ -140,8 +137,14 @@ function App() {
         required: false,
       },
     ],
-    handler: async ({ text, category }) => {
-      const newTodo = {
+    handler: async ({
+      text,
+      category,
+    }: {
+      text: string;
+      category?: string;
+    }) => {
+      const newTodo: Todo = {
         id: Date.now().toString(),
         text,
         completed: false,
@@ -165,7 +168,7 @@ function App() {
         required: true,
       },
     ],
-    handler: async ({ id }) => {
+    handler: async ({ id }: { id: string }) => {
       updateCurrentPlan({
         todos: todos.filter((todo) => todo.id !== id && todo.text !== id),
       });
@@ -204,7 +207,17 @@ function App() {
         required: false,
       },
     ],
-    handler: async ({ id, text, completed, category }) => {
+    handler: async ({
+      id,
+      text,
+      completed,
+      category,
+    }: {
+      id: string;
+      text?: string;
+      completed?: boolean;
+      category?: string;
+    }) => {
       updateCurrentPlan({
         todos: todos.map((todo) =>
           todo.id === id
@@ -247,16 +260,16 @@ function App() {
         required: true,
       },
     ],
-    handler: async ({ location }) => {
+    handler: async ({ location }: { location: string }) => {
       const weather = await getWeatherForLocation(location);
       setWeatherData(weather);
       return `Current weather in ${weather.location}: ${weather.temperature}°C, ${weather.description}. Humidity: ${weather.humidity}%, Wind: ${weather.windSpeed} km/h.`;
     },
-    render: ({ status, result }) => {
+    render: ({ status }) => {
       if (status === "complete" && weatherData) {
         return <WeatherCard weatherData={weatherData} />;
       }
-      return null;
+      return <></>;
     },
   });
 
@@ -272,7 +285,7 @@ function App() {
         required: true,
       },
     ],
-    handler: async ({ location }) => {
+    handler: async ({ location }: { location: string }) => {
       updateCurrentPlan({ location });
       return `Trip location set to: ${location}`;
     },
@@ -298,7 +311,13 @@ function App() {
         required: false,
       },
     ],
-    handler: async ({ name, location }) => {
+    handler: async ({
+      name,
+      location,
+    }: {
+      name: string;
+      location?: string;
+    }) => {
       const newPlan = createNewPlan(name, location);
       setPlans((prev) => [...prev, newPlan]);
       setCurrentPlanId(newPlan.id);
@@ -321,7 +340,7 @@ function App() {
         required: true,
       },
     ],
-    handler: async ({ planName }) => {
+    handler: async ({ planName }: { planName: string }) => {
       const plan = plans.find((p) =>
         p.name.toLowerCase().includes(planName.toLowerCase())
       );
@@ -387,7 +406,15 @@ function App() {
         required: false,
       },
     ],
-    handler: async ({ favoriteDestinations, travelStyle, interests }) => {
+    handler: async ({
+      favoriteDestinations,
+      travelStyle,
+      interests,
+    }: {
+      favoriteDestinations?: string[];
+      travelStyle?: string;
+      interests?: string[];
+    }) => {
       setUserPreferences((prev) => ({
         ...prev,
         ...(favoriteDestinations && { favoriteDestinations }),
@@ -398,7 +425,7 @@ function App() {
     },
   });
 
-  const toggleTodo = (id) => {
+  const toggleTodo = (id: string) => {
     updateCurrentPlan({
       todos: todos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
@@ -406,19 +433,19 @@ function App() {
     });
   };
 
-  const deleteTodo = (id) => {
+  const deleteTodo = (id: string) => {
     updateCurrentPlan({
       todos: todos.filter((todo) => todo.id !== id),
     });
   };
 
-  const handleCreatePlan = (name) => {
+  const handleCreatePlan = (name: string) => {
     const newPlan = createNewPlan(name);
     setPlans((prev) => [...prev, newPlan]);
     setCurrentPlanId(newPlan.id);
   };
 
-  const handleDeletePlan = (planId) => {
+  const handleDeletePlan = (planId: string) => {
     setPlans((prev) => {
       const filtered = prev.filter((p) => p.id !== planId);
       // If deleting current plan, switch to first remaining plan
@@ -429,7 +456,7 @@ function App() {
     });
   };
 
-  const handleRenamePlan = (planId, newName) => {
+  const handleRenamePlan = (planId: string, newName: string) => {
     setPlans((prev) =>
       prev.map((plan) =>
         plan.id === planId

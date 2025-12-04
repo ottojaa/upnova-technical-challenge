@@ -1,5 +1,11 @@
-function WeatherIcon({ condition }) {
-  const iconMap = {
+import { WeatherData } from "../types";
+
+interface WeatherIconProps {
+  condition: string;
+}
+
+function WeatherIcon({ condition }: WeatherIconProps) {
+  const iconMap: Record<string, JSX.Element> = {
     Clear: (
       <svg
         className="w-14 h-14 text-yellow-300"
@@ -118,7 +124,11 @@ function WeatherIcon({ condition }) {
   return iconMap[condition] || iconMap.Clear;
 }
 
-export default function WeatherCard({ weatherData }) {
+interface WeatherCardProps {
+  weatherData: WeatherData | null;
+}
+
+export default function WeatherCard({ weatherData }: WeatherCardProps) {
   if (!weatherData) {
     return null;
   }

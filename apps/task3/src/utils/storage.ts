@@ -2,6 +2,8 @@
  * LocalStorage utility functions for persisting app state
  */
 
+import { Plan, UserPreferences } from "../types";
+
 const STORAGE_KEYS = {
   PLANS: "tripPlanner_plans",
   CURRENT_PLAN_ID: "tripPlanner_currentPlanId",
@@ -9,7 +11,7 @@ const STORAGE_KEYS = {
 };
 
 // Plans management
-export function savePlans(plans) {
+export function savePlans(plans: Plan[]): void {
   try {
     localStorage.setItem(STORAGE_KEYS.PLANS, JSON.stringify(plans));
   } catch (error) {
@@ -17,7 +19,7 @@ export function savePlans(plans) {
   }
 }
 
-export function loadPlans() {
+export function loadPlans(): Plan[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.PLANS);
     return stored ? JSON.parse(stored) : [];
@@ -27,7 +29,7 @@ export function loadPlans() {
   }
 }
 
-export function saveCurrentPlanId(planId) {
+export function saveCurrentPlanId(planId: string | null): void {
   try {
     localStorage.setItem(STORAGE_KEYS.CURRENT_PLAN_ID, planId || "");
   } catch (error) {
@@ -35,7 +37,7 @@ export function saveCurrentPlanId(planId) {
   }
 }
 
-export function loadCurrentPlanId() {
+export function loadCurrentPlanId(): string | null {
   try {
     return localStorage.getItem(STORAGE_KEYS.CURRENT_PLAN_ID) || null;
   } catch (error) {
@@ -45,7 +47,7 @@ export function loadCurrentPlanId() {
 }
 
 // Global preferences (not per-plan)
-export function savePreferences(preferences) {
+export function savePreferences(preferences: UserPreferences): void {
   try {
     localStorage.setItem(STORAGE_KEYS.PREFERENCES, JSON.stringify(preferences));
   } catch (error) {
@@ -53,7 +55,7 @@ export function savePreferences(preferences) {
   }
 }
 
-export function loadPreferences() {
+export function loadPreferences(): UserPreferences {
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.PREFERENCES);
     return stored ? JSON.parse(stored) : {};
@@ -63,7 +65,7 @@ export function loadPreferences() {
   }
 }
 
-export function clearAllData() {
+export function clearAllData(): void {
   try {
     Object.values(STORAGE_KEYS).forEach((key) => {
       localStorage.removeItem(key);
@@ -74,7 +76,10 @@ export function clearAllData() {
 }
 
 // Helper functions for plan operations
-export function createNewPlan(name, location = null) {
+export function createNewPlan(
+  name: string,
+  location: string | null = null
+): Plan {
   return {
     id: Date.now().toString(),
     name,
@@ -83,42 +88,4 @@ export function createNewPlan(name, location = null) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-}
-
-// Migration from old storage format
-const OLD_STORAGE_KEYS = {
-  TODOS: "tripPlanner_todos",
-  TRIP_LOCATION: "tripPlanner_tripLocation",
-};
-
-export function migrateOldDataIfNeeded() {
-  try {
-    // Check if new format already exists
-    const existingPlans = loadPlans();
-    if (existingPlans.length > 0) {
-      return; // Already migrated or using new format
-    }
-
-    // Check for old format data
-    const oldTodos = localStorage.getItem(OLD_STORAGE_KEYS.TODOS);
-    const oldLocation = localStorage.getItem(OLD_STORAGE_KEYS.TRIP_LOCATION);
-
-    if (oldTodos || oldLocation) {
-      // Create a plan from old data
-      const migratedPlan = createNewPlan(oldLocation || "My Trip", oldLocation);
-      migratedPlan.todos = oldTodos ? JSON.parse(oldTodos) : [];
-
-      // Save as new format
-      savePlans([migratedPlan]);
-      saveCurrentPlanId(migratedPlan.id);
-
-      // Clean up old data
-      localStorage.removeItem(OLD_STORAGE_KEYS.TODOS);
-      localStorage.removeItem(OLD_STORAGE_KEYS.TRIP_LOCATION);
-
-      console.log("Successfully migrated old trip data to new format");
-    }
-  } catch (error) {
-    console.error("Failed to migrate old data:", error);
-  }
 }

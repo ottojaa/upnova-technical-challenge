@@ -3,7 +3,35 @@
  * Free API, no key required
  */
 
-export async function getWeatherForLocation(location) {
+import { WeatherData } from "../types";
+
+interface GeoResponse {
+  results?: Array<{
+    latitude: number;
+    longitude: number;
+    name: string;
+    country: string;
+  }>;
+}
+
+interface WeatherResponse {
+  current: {
+    temperature_2m: number;
+    relative_humidity_2m: number;
+    apparent_temperature: number;
+    wind_speed_10m: number;
+    weather_code: number;
+  };
+}
+
+interface WeatherCondition {
+  condition: string;
+  description: string;
+}
+
+export async function getWeatherForLocation(
+  location: string
+): Promise<WeatherData> {
   try {
     // Step 1: Geocode the location to get coordinates
     const geoResponse = await fetch(
@@ -16,7 +44,7 @@ export async function getWeatherForLocation(location) {
       throw new Error("Geocoding request failed");
     }
 
-    const geoData = await geoResponse.json();
+    const geoData: GeoResponse = await geoResponse.json();
 
     if (!geoData.results || geoData.results.length === 0) {
       throw new Error("Location not found");
@@ -33,7 +61,7 @@ export async function getWeatherForLocation(location) {
       throw new Error("Weather API request failed");
     }
 
-    const weatherData = await weatherResponse.json();
+    const weatherData: WeatherResponse = await weatherResponse.json();
     const current = weatherData.current;
 
     // Step 3: Map weather codes to human-readable conditions
@@ -64,8 +92,8 @@ export async function getWeatherForLocation(location) {
   }
 }
 
-function getWeatherCondition(weatherCode) {
-  const weatherCodeMap = {
+function getWeatherCondition(weatherCode: number): WeatherCondition {
+  const weatherCodeMap: Record<number, WeatherCondition> = {
     0: { condition: "Clear", description: "clear skies" },
     1: { condition: "Mainly Clear", description: "mainly clear" },
     2: { condition: "Partly Cloudy", description: "partly cloudy" },

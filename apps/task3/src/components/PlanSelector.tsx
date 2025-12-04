@@ -1,4 +1,14 @@
 import { useState } from "react";
+import { Plan } from "../types";
+
+interface PlanSelectorProps {
+  plans: Plan[];
+  currentPlanId: string | null;
+  onSelectPlan: (id: string) => void;
+  onCreatePlan: (name: string) => void;
+  onDeletePlan: (id: string) => void;
+  onRenamePlan: (id: string, name: string) => void;
+}
 
 export default function PlanSelector({
   plans,
@@ -7,12 +17,12 @@ export default function PlanSelector({
   onCreatePlan,
   onDeletePlan,
   onRenamePlan,
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newPlanName, setNewPlanName] = useState("");
-  const [editingPlanId, setEditingPlanId] = useState(null);
-  const [editingName, setEditingName] = useState("");
+}: PlanSelectorProps) {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [newPlanName, setNewPlanName] = useState<string>("");
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>("");
 
   const currentPlan = plans.find((p) => p.id === currentPlanId);
 
@@ -24,7 +34,7 @@ export default function PlanSelector({
     }
   };
 
-  const handleRename = (planId) => {
+  const handleRename = (planId: string) => {
     if (editingName.trim()) {
       onRenamePlan(planId, editingName.trim());
       setEditingPlanId(null);
@@ -32,7 +42,7 @@ export default function PlanSelector({
     }
   };
 
-  const startEditing = (plan) => {
+  const startEditing = (plan: Plan) => {
     setEditingPlanId(plan.id);
     setEditingName(plan.name);
   };
