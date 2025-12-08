@@ -7,7 +7,6 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -17,46 +16,45 @@ body {
 
 #root {
   width: 100%;
-  max-width: 500px;
+  max-width: 600px;
 }
 
 .container {
   background: white;
   border-radius: 20px;
   padding: 60px 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 30px;
+  height: 500px;
 }
 
 .icon-container {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #e3f4ff;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  transform-origin: bottom;
 }
 
-.icon-container.success {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+.otp-input.success {
+  border-color: #22c55e !important;
+  background: white;
 }
 
 .icon {
-  color: white;
-  font-size: 36px;
+  color: #0394ff;
 }
 
 .header {
   text-align: center;
 }
 
-.header h1 {
-  font-size: 32px;
+.header h2 {
   color: #1f2937;
   margin-bottom: 12px;
   font-weight: 700;
@@ -81,12 +79,38 @@ body {
   gap: 12px;
   justify-content: center;
   width: 100%;
+  position: relative;
+}
+
+.otp-outline {
+  position: absolute;
+  inset: 0;
+  border: 3px solid #3b82f6;
+  border-radius: 12px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.otp-outline.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
 .otp-input-wrapper {
   position: relative;
   width: 60px;
   height: 70px;
+}
+
+.error-message {
+  min-width: 15rem;
+  text-align: center;
+  color: #ef4444;
+}
+
+.resend-link {
+  text-align: center;
 }
 
 .otp-input {
@@ -104,25 +128,7 @@ body {
   caret-color: transparent;
 }
 
-.otp-input.focused {
-  border-color: #3b82f6;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.otp-input.error {
-  border-color: #ef4444;
-  background: #fef2f2;
-}
-
-.otp-input.error.focused {
-  border-color: #ef4444;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-}
-
-.otp-input.success {
-  border-color: #22c55e;
+.otp-input:focus {
   background: white;
 }
 

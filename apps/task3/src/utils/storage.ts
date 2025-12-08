@@ -78,13 +78,16 @@ export function clearAllData(): void {
 // Helper functions for plan operations
 export function createNewPlan(
   name: string,
-  location: string | null = null
+  location: string | null = null,
+  date?: string
 ): Plan {
   return {
     id: Date.now().toString(),
     name,
     location,
+    date,
     todos: [],
+    itinerary: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

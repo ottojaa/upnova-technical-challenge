@@ -1,4 +1,5 @@
-import { motion } from "motion/react";
+import { LockIcon, MailIcon } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 const CORRECT_OTP = "123456";
@@ -6,6 +7,7 @@ const CORRECT_OTP = "123456";
 function OTPInput() {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [outlineIndex, setOutlineIndex] = useState(0);
   const [status, setStatus] = useState("idle"); // idle, error, success
   const [iconType, setIconType] = useState("email");
   const inputRefs = useRef([]);
@@ -16,12 +18,24 @@ function OTPInput() {
     }
   }, [focusedIndex]);
 
+  // Sync outline with focus during normal operation
+  useEffect(() => {
+    if (status === "idle" || status === "success") {
+      setOutlineIndex(focusedIndex);
+    }
+  }, [focusedIndex, status]);
+
   const handleInput = (index, value) => {
     // Only allow single digit numbers
     if (!/^\d$/.test(value) && value !== "") return;
 
     // Reset status if we're modifying after success
     if (status === "success") {
+      setStatus("idle");
+      setIconType("email");
+    }
+
+    if (status === "error") {
       setStatus("idle");
       setIconType("email");
     }
@@ -35,23 +49,27 @@ function OTPInput() {
     }
 
     // Check if all 6 digits are entered
-    if (index === 5 && value) {
+    if (value && newDigits.every((digit) => digit !== "")) {
       const otp = newDigits.join("");
       validateOTP(otp);
     }
   };
 
-  const handleEnterIncorrectOTPError = () => {
+  const handleEnterIncorrectOTPError = async () => {
     setStatus("error");
 
-    // Keep focus at the end initially, then move back to start
-    setTimeout(() => {
-      setDigits(["", "", "", "", "", ""]);
-      setFocusedIndex(0);
-      setTimeout(() => {
-        setStatus("idle");
-      }, 100);
-    }, 600);
+    // Wait for shake animation
+    await new Promise((r) => setTimeout(r, 500));
+
+    // Clear digits and reset
+    setDigits(["", "", "", "", "", ""]);
+    setFocusedIndex(0);
+    setOutlineIndex(0);
+  };
+
+  const handleFocus = (index) => {
+    setFocusedIndex(index);
+    setOutlineIndex(index);
   };
 
   const validateOTP = (otp) => {
@@ -76,11 +94,9 @@ function OTPInput() {
       const newDigits = [...digits];
 
       if (digits[index]) {
-        // Clear current digit
         newDigits[index] = "";
         setDigits(newDigits);
       } else if (index > 0) {
-        // Move to previous input and clear it
         newDigits[index - 1] = "";
         setDigits(newDigits);
         setFocusedIndex(index - 1);
@@ -120,27 +136,40 @@ function OTPInput() {
         animate={
           status === "success"
             ? {
-                scale: [1, 1.2, 1],
-                rotate: [0, 10, -10, 0],
+                scaleY: [1, 0.7, 1],
+                scaleX: [1, 1.15, 1],
               }
             : {}
         }
-        transition={{ duration: 0.5 }}
+        transition={{
+          scaleY: {
+            duration: 0.3,
+            ease: [0.8, 1.26, 0.64, 1],
+            times: [0, 0.25, 1],
+          },
+          scaleX: {
+            duration: 0.3,
+            ease: [0.7, 1.26, 0.64, 1],
+            times: [0, 0.45, 1], // lags behind by 0.1
+          },
+        }}
       >
         <motion.div
           className="icon"
           key={iconType}
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 200, damping: 15 }}
         >
-          {iconType === "email" ? "✉️" : "🔒"}
+          {iconType === "email" ? (
+            <MailIcon size={36} />
+          ) : (
+            <LockIcon size={36} />
+          )}
         </motion.div>
       </motion.div>
 
       <div className="header">
-        <h1>One Time Password</h1>
-        <p>Please enter the 6-digit code sent to your email</p>
+        <h2>We've emailed you a verification code.</h2>
+        <p>Please enter the code we sent you below.</p>
       </div>
 
       <div className="otp-form">
@@ -157,21 +186,32 @@ function OTPInput() {
         >
           {digits.map((digit, index) => (
             <div key={index} className="otp-input-wrapper">
+              {/* Animated outline using layoutId */}
+              {status !== "success" && outlineIndex === index && (
+                <motion.div
+                  layoutId="otp-outline"
+                  className={`otp-outline ${status === "error" ? "error" : ""}`}
+                  transition={
+                    status === "error"
+                      ? { type: "spring", stiffness: 300, damping: 30 }
+                      : { duration: 0.12, ease: "easeInOut" }
+                  }
+                />
+              )}
               <input
                 ref={(el) => (inputRefs.current[index] = el)}
                 type="text"
                 inputMode="numeric"
                 maxLength="1"
-                className={`${getInputClassName()} ${
-                  focusedIndex === index ? "focused" : ""
-                }`}
+                className={getInputClassName()}
                 value={digit}
                 onChange={(e) => handleInput(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                onFocus={() => setFocusedIndex(index)}
+                onFocus={() => handleFocus(index)}
               />
               {!digit && <div className="otp-placeholder">0</div>}
+
               {digit && (
                 <motion.div
                   className="otp-digit"
@@ -191,9 +231,30 @@ function OTPInput() {
           ))}
         </motion.div>
 
-        <div className={`status-message ${status}`}>
-          {status === "error" && "❌ Incorrect code. Please try again."}
-          {status === "success" && "✅ Verification successful!"}
+        <div className="footer-container">
+          <AnimatePresence mode="popLayout">
+            {status === "error" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="error-message"
+              >
+                Incorrect validation code
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <motion.div
+            variants={{
+              error: { y: 20 },
+              success: { y: 0 },
+            }}
+            animate={status}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="resend-link"
+          >
+            Didn't receive a code? <b>Resend</b>
+          </motion.div>
         </div>
       </div>
     </div>

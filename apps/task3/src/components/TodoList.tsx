@@ -1,3 +1,4 @@
+import { Check, Trash2 } from "lucide-react";
 import { Todo } from "../types";
 
 interface TodoListProps {
@@ -71,21 +72,7 @@ export default function TodoList({ todos, onToggle, onDelete }: TodoListProps) {
                         : "border-gray-300 hover:border-green-400"
                     }`}
                   >
-                    {todo.completed && (
-                      <svg
-                        className="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    )}
+                    {todo.completed && <Check className="w-4 h-4 text-white" />}
                   </button>
                   <span
                     className={`flex-1 ${
@@ -100,19 +87,7 @@ export default function TodoList({ todos, onToggle, onDelete }: TodoListProps) {
                     onClick={() => onDelete(todo.id)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               ))}

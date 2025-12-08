@@ -3,10 +3,17 @@ import "@copilotkit/react-ui/styles.css";
 import { useEffect, useState } from "react";
 import "./App.css";
 import EmptyState from "./components/EmptyState";
+import ItineraryView from "./components/ItineraryView";
 import PlanSelector from "./components/PlanSelector";
 import TodoList from "./components/TodoList";
 import { useTripPlannerCopilot } from "./hooks/useTripPlannerCopilot";
-import { Plan, Todo, UserPreferences, WeatherData } from "./types";
+import {
+  ItineraryItem,
+  Plan,
+  Todo,
+  UserPreferences,
+  WeatherData,
+} from "./types";
 import {
   createNewPlan,
   loadCurrentPlanId,
@@ -72,16 +79,20 @@ function App() {
   // Get current plan
   const currentPlan = plans.find((p) => p.id === currentPlanId);
   const todos: Todo[] = currentPlan?.todos || [];
+  const itinerary: ItineraryItem[] = currentPlan?.itinerary || [];
   const tripLocation: string | null = currentPlan?.location || null;
+  const tripDate: string | undefined = currentPlan?.date;
 
-  // Update current plan
-  const updateCurrentPlan = (updates: Partial<Plan>) => {
+  // Update current plan - supports both direct updates and functional updates
+  const updateCurrentPlan = (
+    updater: Partial<Plan> | ((currentPlan: Plan) => Partial<Plan>)
+  ) => {
     setPlans((prev) =>
-      prev.map((plan) =>
-        plan.id === currentPlanId
-          ? { ...plan, ...updates, updatedAt: new Date().toISOString() }
-          : plan
-      )
+      prev.map((plan) => {
+        if (plan.id !== currentPlanId) return plan;
+        const updates = typeof updater === "function" ? updater(plan) : updater;
+        return { ...plan, ...updates, updatedAt: new Date().toISOString() };
+      })
     );
   };
 
@@ -111,6 +122,18 @@ function App() {
     updateCurrentPlan({
       todos: todos.filter((todo) => todo.id !== id),
     });
+  };
+
+  const deleteItineraryItem = (id: string) => {
+    updateCurrentPlan((plan) => ({
+      itinerary: plan.itinerary.filter((item) => item.id !== id),
+      // Also unlink any todos that were linked to this item
+      todos: plan.todos.map((todo) =>
+        todo.itineraryItemId === id
+          ? { ...todo, itineraryItemId: undefined }
+          : todo
+      ),
+    }));
   };
 
   const handleCreatePlan = (name: string) => {
@@ -148,7 +171,7 @@ function App() {
         labels={{
           title: "Trip Planning Assistant",
           initial:
-            '👋 Hi! I\'m your travel planning assistant. I can help you plan trips and manage your todo list.\n\n✈️ Try saying:\n- "Help me create a todo list for a trip to Paris"\n- "Create a new plan for my Tokyo trip"\n- "Switch to my Paris plan"\n- "What\'s the weather like in Tokyo?"\n- "Add a todo to visit the Eiffel Tower"\n\nYou can manage multiple trip plans simultaneously and I\'ll remember everything!',
+            '👋 Hi! I\'m your travel planning assistant. I can help you plan trips with detailed itineraries.\n\n✈️ Try saying:\n- "Plan a day trip in Paris for December 24th"\n- "Arrive in Paris by car at 12:00, then walk to a cafe at 13:00"\n- "Add a stop at the Louvre at 15:00 by walking"\n- "What\'s the weather like in Paris?"\n- "Calculate travel time from Paris to Lyon by car"\n\nI\'ll help you build a complete itinerary with travel times between stops!',
         }}
       >
         <div className="h-screen w-full flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -160,12 +183,20 @@ function App() {
                   <h1 className="text-3xl font-bold text-gray-800">
                     ✈️ Trip Planner
                   </h1>
-                  {tripLocation && (
+                  {(tripLocation || tripDate) && (
                     <p className="text-gray-600 mt-1">
-                      Planning for:{" "}
-                      <span className="font-semibold text-blue-600">
-                        {tripLocation}
-                      </span>
+                      {tripLocation && (
+                        <>
+                          Planning for:{" "}
+                          <span className="font-semibold text-blue-600">
+                            {tripLocation}
+                          </span>
+                        </>
+                      )}
+                      {tripLocation && tripDate && " · "}
+                      {tripDate && (
+                        <span className="text-gray-500">{tripDate}</span>
+                      )}
                     </p>
                   )}
                 </div>
@@ -184,15 +215,37 @@ function App() {
           {/* Main Content */}
           <div className="flex-1 overflow-y-auto px-6 py-8">
             <div className="max-w-6xl mx-auto">
-              {todos.length > 0 ? (
+              {/* Itinerary View */}
+              <ItineraryView
+                itinerary={itinerary}
+                todos={todos}
+                tripDate={tripDate}
+                onToggleTodo={toggleTodo}
+                onDeleteTodo={deleteTodo}
+                onDeleteItineraryItem={deleteItineraryItem}
+              />
+
+              {/* TodoList for unassigned todos (only show if there are itinerary items) */}
+              {itinerary.length > 0 &&
+                todos.filter((t) => !t.itineraryItemId).length > 0 && (
+                  <TodoList
+                    todos={todos.filter((t) => !t.itineraryItemId)}
+                    onToggle={toggleTodo}
+                    onDelete={deleteTodo}
+                  />
+                )}
+
+              {/* Show TodoList grouped by category when no itinerary */}
+              {itinerary.length === 0 && todos.length > 0 && (
                 <TodoList
                   todos={todos}
                   onToggle={toggleTodo}
                   onDelete={deleteTodo}
                 />
-              ) : (
-                <EmptyState />
               )}
+
+              {/* Empty state when nothing exists */}
+              {itinerary.length === 0 && todos.length === 0 && <EmptyState />}
             </div>
           </div>
         </div>
